@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Máquina de Estados Real - Transacción Electrónica</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    h1 { text-align: center; color: #2c3e50; }
+    .state-box { border: 2px solid #2c3e50; border-radius: 10px; padding: 15px; margin-top: 20px; background: #fff; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    button { padding: 10px 15px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; background-color: #3498db; color: white; transition: 0.3s; }
+    button:hover { background-color: #2980b9; }
+    .log { margin-top: 20px; background: #eef; padding: 10px; border-radius: 5px; height: 150px; overflow-y: auto; }
+    .final { color: green; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>⚖️ Máquina de Estado Finita Real - Transacción Electrónica</h1>
+
+  <div class="state-box">
+    <h2>Estado actual: <span id="estado">S0 - Inicio</span></h2>
+    <div class="buttons">
+      <button onclick="fsm.handle('iniciar')">Iniciar sesión</button>
+      <button onclick="fsm.handle('validar')">Validar identidad</button>
+      <button onclick="fsm.handle('pagar')">Solicitar pago</button>
+      <button onclick="fsm.handle('enviar_tienda')">Enviar a tienda</button>
+      <button onclick="fsm.handle('verificar')">Verificar fondos</button>
+      <button onclick="fsm.handle('autorizar')">Autorizar</button>
+      <button onclick="fsm.handle('cancelar')">Cancelar</button>
+      <button onclick="fsm.handle('entregar')">Entregar producto</button>
+      <button onclick="fsm.handle('liberar')">Liberar fondos</button>
+      <button onclick="fsm.handle('transferir')">Transferir</button>
+      <button onclick="fsm.handle('confirmar')">Confirmar transferencia</button>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    class FSM {
+      constructor(estados, estadoInicial, finales) {
+        this.estados = estados;
+        this.estadoActual = estadoInicial;
+        this.finales = finales;
+        this.estadoTexto = document.getElementById("estado");
+        this.log = document.getElementById("log");
+        this.mostrarEstado();
+      }
+
+      handle(accion) {
+        const transiciones = this.estados[this.estadoActual];
+        if (transiciones && transiciones[accion]) {
+          const estadoAnterior = this.estadoActual;
+          this.estadoActual = transiciones[accion];
+          this.mostrarEstado();
+          this.log.innerHTML += `✔️ Transición: ${this.nombre(estadoAnterior)} ➜ ${this.nombre(this.estadoActual)}<br>`;
+        } else {
+          this.log.innerHTML += `<span class="error">❌ Acción inválida desde ${this.nombre(this.estadoActual)} con '${accion}'</span><br>`;
+        }
+        this.log.scrollTop = this.log.scrollHeight;
+      }
+
+      nombre(estado) {
+        return nombresEstados[estado] || estado;
+      }
+
+      mostrarEstado() {
+        const texto = this.nombre(this.estadoActual);
+        this.estadoTexto.innerHTML = this.finales.includes(this.estadoActual)
+          ? `<span class="final">${texto}</span>`
+          : texto;
+      }
+    }
+
+    const nombresEstados = {
+      'S0': 'S0 - Inicio',
+      'S1': 'S1 - Sesión iniciada',
+      'S2': 'S2 - Identidad validada',
+      'S3': 'S3 - Pago solicitado',
+      'S4': 'S4 - Enviado a tienda',
+      'S5': 'S5 - Verificando fondos',
+      'S6': 'S6 - Cancelado por cliente',
+      'S7': 'S7 - Autorizado por banco',
+      'S8': 'S8 - Producto entregado',
+      'S9': 'S9 - Fondos solicitados',
+      'S10': 'S10 - Transferencia en proceso',
+      'S11': 'S11 - Transacción finalizada'
+    };
+
+    const estados = {
+      'S0': { 'iniciar': 'S1' },
+      'S1': { 'validar': 'S2' },
+      'S2': { 'pagar': 'S3' },
+      'S3': { 'enviar_tienda': 'S4' },
+      'S4': { 'verificar': 'S5' },
+      'S5': { 'autorizar': 'S7', 'cancelar': 'S6' },
+      'S7': { 'entregar': 'S8' },
+      'S8': { 'liberar': 'S9' },
+      'S9': { 'transferir': 'S10' },
+      'S10': { 'confirmar': 'S11' }
+    };
+
+    const estadosFinales = ['S6', 'S11']; // Cancelado o Finalizado
+
+    const fsm = new FSM(estados, 'S0', estadosFinales);
+  </script>
+</body>
+</html>
